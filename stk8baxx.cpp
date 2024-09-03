@@ -122,11 +122,11 @@ bool STK8xxx::STK8xxx_Check_chipid()
     ReadAccRegister(RegAddr, &chipid_temp);
     for (i = 0; i < pid_num; i++) {
         if (chipid_temp == stk8xxx_pid_list[i]) {
-            DEBUG_INFO("Read stkchip id ok, chip_id = 0x%x", chipid_temp);
+            LOG_INFO("Read STK chip id ok, chip_id = 0x%x\n", chipid_temp);
             return true;
         }
     }
-    DEBUG_ERROR("read stkchip id fail!");
+    LOG_INFO("Read STK chip id fail!\n");
     return false;
 }
 
