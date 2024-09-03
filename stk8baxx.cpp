@@ -1,4 +1,5 @@
 #include "stk8baxx.h"
+#include <Arduino.h>
 #include <Wire.h>
 
 #define PID_SIZE 16
