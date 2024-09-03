@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 
 class STK8xxx
 {
