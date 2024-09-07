@@ -161,7 +161,7 @@ class STK8xxx
 /*
  * INTMAP2, This register is used to map the related interrupt to the desired INT pin.
  */
-#define STK8xxx_REG_INTMAP1 0x1A // INTMAP2 Register Address
+#define STK8xxx_REG_INTMAP2 0x1A // INTMAP2 Register Address
 #define STK8xxx_VAL_DATA2INT1 // 0 : Do not map new data interrupt to INT1, 1 : Map new data interrupt to INT1.
 
 /*
