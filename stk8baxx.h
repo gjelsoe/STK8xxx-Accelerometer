@@ -148,7 +148,7 @@ class STK8xxx
 /*
  * INT2, This register contains the several interrupt enable bit.
  */
-#define STK8xxx_REG_INTEN1 0x17 // INT2 Register Address
+#define STK8xxx_REG_INTEN2 0x17 // INT2 Register Address
 #define STK8xxx_VAL_DATA_EN (bit4) // 0 : Disable new data interrupt, 1 : Enable new data interrupt.
 
 /*
