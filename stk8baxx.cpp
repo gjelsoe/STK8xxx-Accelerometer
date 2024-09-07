@@ -1,11 +1,33 @@
+/*!
+ * @file stk8baxx.cpp
+ *
+ * @mainpage SonsorTek STK8xxx Digital Output 3-axis MEMS Accelerometer
+ *
+ * @section author Author
+ *
+ * Written by Michael Gjelsø, for use with Meshtastic and RadioMaster Bandit
+ *
+ * @section license License
+ *
+ * BSD license, all text here must be included in any redistribution.
+ * See the LICENSE file for details.
+ *
+ */
+
 #include "stk8baxx.h"
 #include <Arduino.h>
 #include <Wire.h>
 
 #define PID_SIZE 16
 uint8_t chipid_temp = 0x00;
+uint8_t range_temp = 0x00;
 uint8_t stk8xxx_pid_list[PID_SIZE] = {STK8xxx_CHIPID_VAL, STK8BA50_X_CHIPID_VAL, STK8BA5X_CHIPID_VAL, STK8327_CHIPID_VAL};
 
+/*!
+ *   @brief  Read from I2C Register
+ *   @param  reg Read from address
+ *   @param  data Store in Data.
+ */
 void STK8xxx::ReadAccRegister(uint8_t reg, uint8_t *data)
 {
     Wire.beginTransmission(STK8xxx_SLAVE_ADDRESS);
@@ -16,6 +38,11 @@ void STK8xxx::ReadAccRegister(uint8_t reg, uint8_t *data)
     *data = Wire.read();                        // receive a byte
 }
 
+/*!
+ *   @brief  Write to I2C Register
+ *   @param  reg Write to address
+ *   @param  data Data to be written.
+ */
 void STK8xxx::WriteAccRegister(uint8_t reg, uint8_t data)
 {
     Wire.beginTransmission(STK8xxx_SLAVE_ADDRESS);
@@ -24,97 +51,74 @@ void STK8xxx::WriteAccRegister(uint8_t reg, uint8_t data)
     Wire.endTransmission();
 }
 
-/*
- * Anymotion init register
- * Must be placed after the software reset
- *
+/*!
+ *   @brief  Setup for Any motion.
  */
 void STK8xxx::STK8xxx_Anymotion_init()
 {
-    unsigned char ARegAddr, ARegWriteValue;
+    unsigned char ARegWriteValue;
 
     /* Enable X Y Z-axis any-motion (slope) interrupt */
-    ARegAddr = STK8xxx_REG_INTEN1;
     ARegWriteValue = STK8xxx_VAL_SLP_EN_X | STK8xxx_VAL_SLP_EN_Y | STK8xxx_VAL_SLP_EN_Z;
-    WriteAccRegister(ARegAddr, ARegWriteValue);
+    WriteAccRegister(STK8xxx_REG_INTEN1, ARegWriteValue);
 
-    /* Set anymotion Interrupt trigger threshold */
-    ARegAddr = STK8xxx_REG_SLOPETHD;
-    ARegWriteValue = STK8xxx_VAL_SLP_DFLT;
-    WriteAccRegister(ARegAddr, ARegWriteValue);
+    /* Set any motion Interrupt trigger threshold */
+    WriteAccRegister(STK8xxx_REG_SLOPETHD, STK8xxx_VAL_SLP_DFLT);
 
     /* Enable any-motion */
-    ARegAddr = STK8xxx_REG_SIGMOT2;
-    ARegWriteValue = STK8xxx_VAL_ANY_MOT_EN;
-    WriteAccRegister(ARegAddr, ARegWriteValue);
+    WriteAccRegister(STK8xxx_REG_SIGMOT2, STK8xxx_VAL_ANY_MOT_EN);
 
     /* Map any-motion (slope) interrupt to INT1 */
-    ARegAddr = STK8xxx_REG_INTMAP1;
-    ARegWriteValue = STK8xxx_VAL_ANYMOT2INT1;
-    WriteAccRegister(ARegAddr, ARegWriteValue);
+    WriteAccRegister(STK8xxx_REG_INTMAP1, STK8xxx_VAL_ANYMOT2INT1);
 }
 
-/*
- * Sigmotion init register
- * Must be placed after the software reset
- *
+/*!
+ *   @brief  Setup for Significant motion
  */
 void STK8xxx::STK8xxx_Sigmotion_init()
 {
-    unsigned char SRegAddr, SRegWriteValue;
+    unsigned char SRegWriteValue;
 
     /* Enable X Y Z-axis sig-motion (slope) interrupt */
-    SRegAddr = STK8xxx_REG_INTEN1;
     SRegWriteValue = STK8xxx_VAL_SLP_EN_X | STK8xxx_VAL_SLP_EN_Y | STK8xxx_VAL_SLP_EN_Z;
-    WriteAccRegister(SRegAddr, SRegWriteValue);
+    WriteAccRegister(STK8xxx_REG_INTEN1, SRegWriteValue);
 
     /* Set sig-motion Interrupt trigger threshold */
-    SRegAddr = STK8xxx_REG_SLOPETHD;
-    SRegWriteValue = STK8xxx_VAL_SLP_DFLT;
-    WriteAccRegister(SRegAddr, SRegWriteValue);
+    WriteAccRegister(STK8xxx_REG_SLOPETHD, STK8xxx_VAL_SLP_DFLT);
 
     /* Enable significant motion */
-    SRegAddr = STK8xxx_REG_SIGMOT2;
-    SRegWriteValue = STK8xxx_VAL_SIG_MOT_EN;
-    WriteAccRegister(SRegAddr, SRegWriteValue);
+    WriteAccRegister(STK8xxx_REG_SIGMOT2, STK8xxx_VAL_SIG_MOT_EN);
 
     /* Map significant motion interrupt to INT1 */
-    SRegAddr = STK8xxx_REG_INTMAP1;
-    SRegWriteValue = STK8xxx_VAL_SIGMOT2INT1;
-    WriteAccRegister(SRegAddr, SRegWriteValue);
+    WriteAccRegister(STK8xxx_REG_INTMAP1, STK8xxx_VAL_SIGMOT2INT1);
 }
 
-/*
- * Diable motion register
- * Must be placed after the software reset
- *
+/*!
+ *   @brief  Disable motion
  */
 void STK8xxx::STK8xxx_Disable_Motion()
 {
-    unsigned char ARegAddr, ARegWriteValue;
-
     /* Disable X Y Z-axis motion (slope) interrupt */
-    ARegAddr = STK8xxx_REG_INTEN1;
-    ARegWriteValue = 0x00;
-    WriteAccRegister(ARegAddr, ARegWriteValue);
+    WriteAccRegister(STK8xxx_REG_INTEN1, 0x00);
 
     /* Disable motion */
-    ARegAddr = STK8xxx_REG_SIGMOT2;
-    ARegWriteValue = 0x00;
-    WriteAccRegister(ARegAddr, ARegWriteValue);
+    WriteAccRegister(STK8xxx_REG_SIGMOT2, 0x00);
 }
 
-/* Disable Gsensor */
+/*!
+ *   @brief  Suspend Mode
+ */
 void STK8xxx::STK8xxx_Suspend_mode()
 {
-    unsigned char RegAddr, RegWriteValue;
-
     /* suspend mode enable */
-    RegAddr = STK8xxx_REG_POWMODE;
-    RegWriteValue = STK8xxx_VAL_SUSPEND;
-    WriteAccRegister(RegAddr, RegWriteValue);
+    WriteAccRegister(STK8xxx_REG_POWMODE, STK8xxx_VAL_SUSPEND);
 }
 
+/*!
+ *   @brief Check for a valid CHIP ID
+ *   @returns true on success, false otherwise
+ *   Stores CHIP ID in chipid_temp
+ */
 bool STK8xxx::STK8xxx_Check_chipid()
 {
     uint8_t RegAddr = STK_REG_CHIPID;
@@ -123,65 +127,71 @@ bool STK8xxx::STK8xxx_Check_chipid()
     ReadAccRegister(RegAddr, &chipid_temp);
     for (i = 0; i < pid_num; i++) {
         if (chipid_temp == stk8xxx_pid_list[i]) {
-            //LOG_INFO("Read STK chip id ok, chip_id = 0x%x\n", chipid_temp);
             return true;
         }
     }
-    //LOG_INFO("Read STK chip id fail!\n");
     return false;
 }
 
-/*
- * Initializes an example function
- * The initial configuration is in active mode.
- * STK8xxx is in the gear of ODR=2000Hz, and the range is set to +/-4G
- *
+/*!
+ *   @brief Initializes the CHIP with a specific Sensing Range
+ *   @param range Is used to set Sensing Range
  */
-int STK8xxx::STK8xxx_Initialization()
+int STK8xxx::STK8xxx_Initialization(uint8_t range)
 {
-    unsigned char RegAddr, RegWriteValue;
-
     if (!STK8xxx_Check_chipid()) {
         return -1;
     }
 
+    range_temp = range;
+
     /* soft-reset */
-    RegAddr = STK8xxx_REG_SWRST;
-    RegWriteValue = STK8xxx_VAL_RST_DFLTS;
-    WriteAccRegister(RegAddr, RegWriteValue);
+    WriteAccRegister(STK8xxx_REG_SWRST, STK8xxx_VAL_SWRST_RESET);
     delay(50); // unit ms
 
     /* set range, resolution */
-    RegAddr = STK8xxx_REG_RANGESEL;
-    RegWriteValue = STK8xxx_RANGE_4G; // range = +/-4g
-    WriteAccRegister(RegAddr, RegWriteValue);
+    WriteAccRegister(STK8xxx_REG_RANGESEL, range);
 
-    /* set power mode */
-    RegAddr = STK8xxx_REG_POWMODE;
-    RegWriteValue = STK8xxx_VAL_SLEEP_05; // active mode
-    WriteAccRegister(RegAddr, RegWriteValue);
+    /* set power mode to active */
+    WriteAccRegister(STK8xxx_REG_POWMODE, STK8xxx_VAL_SLEEP_05);
 
-    /* set bandwidth */
-    RegAddr = STK8xxx_REG_BWSEL;
-    RegWriteValue = STK8xxx_VAL_BW_1000; // bandwidth = 1000Hz
-    WriteAccRegister(RegAddr, RegWriteValue);
+    /* set bandwidth 125Hz*/
+    WriteAccRegister(STK8xxx_REG_BWSEL, STK8xxx_VAL_BW_125);
 
-    // STK8xxx_Anymotion_init();
-    // STK8xxx_Sigmotion_init();
+    /* set i2c watch dog, enable watch dog */
+    WriteAccRegister(STK8xxx_REG_INTFCFG, STK8xxx_VAL_I2C_WDT_EN);
 
-    /* set i2c watch dog */
-    RegAddr = STK8xxx_REG_INTFCFG;
-    RegWriteValue = STK8xxx_VAL_I2C_WDT_EN; // enable watch dog
-    WriteAccRegister(RegAddr, RegWriteValue);
-
-    /* int config */
-    RegAddr = STK8xxx_REG_INTCFG1;
-    RegWriteValue = STK8xxx_VAL_INT_LV; // INT1/INT2 push-pull, active high
-    WriteAccRegister(RegAddr, RegWriteValue);
+    /* int config INT1/INT2 push-pull, active high */
+    WriteAccRegister(STK8xxx_REG_INTCFG1, STK8xxx_VAL_INT_LV);
 
     return chipid_temp;
 }
 
+/*!
+ *   @brief Set Bandwidth Range
+ *   @param bandwidth Is used to set bandwidth range
+ */
+void STK8xxx::STK8xxx_Set_Bandwidth(uint8_t bandwidth)
+{
+    /* set bandwidth */
+    WriteAccRegister(STK8xxx_REG_BWSEL, bandwidth);
+}
+
+/*!
+ *   @brief Set Sensing Range
+ *   @param range Is used to set Sensing Range
+ */
+void STK8xxx::STK8xxx_Set_Range(uint8_t range)
+{
+    /* set range, resolution */
+    range_temp = range;
+    WriteAccRegister(STK8xxx_REG_RANGESEL, range);
+}
+
+/*!
+ *   @brief Get Sensitivity
+ *   @returns Sensitivity value
+ */
 int STK8xxx::STK8xxx_Get_Sensitivity()
 {
     int sensitivity = 0;
@@ -192,12 +202,16 @@ int STK8xxx::STK8xxx_Get_Sensitivity()
         // resolution = 12 bit
         sensitivity = 1 << 11;
     }
-    // range = +/-4g
-    sensitivity = sensitivity / 4;
+    sensitivity = sensitivity / range_temp;
     return sensitivity;
 }
 
-/* Read data from registers */
+/*!
+ *   @brief Read XYZ sensor data
+ *   @param X_DataOut X-axis data output
+ *   @param Y_DataOut Y-axis data output
+ *   @param Z_DataOut Z-axis data output
+ */
 void STK8xxx::STK8xxx_Getregister_data(float *X_DataOut, float *Y_DataOut, float *Z_DataOut)
 {
     uint8_t RegAddr, RegReadValue[2];
