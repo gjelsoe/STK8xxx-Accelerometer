@@ -5,7 +5,8 @@
  *
  * @section author Author
  *
- * Written by Michael Gjelsø, for use with Meshtastic and RadioMaster Bandit
+ * Reworked by Michael Gjelsø, for use with Meshtastic and RadioMaster Bandit
+ * Credits to ExpressLRS for their work.
  *
  * @section license License
  *
