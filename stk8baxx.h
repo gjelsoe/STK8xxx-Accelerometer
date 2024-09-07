@@ -19,7 +19,7 @@ class STK8xxx
 
     /** @brief Sets a specified bandwidth
         @param bandwidth Is used to set bandwidth range */
-    void STK8xxx_Set_Bandwidth(uint8_t bandwidth)
+    void STK8xxx_Set_Bandwidth(uint8_t bandwidth);
 
     /** @brief Enables detection for Any motion */
     void STK8xxx_Anymotion_init();
